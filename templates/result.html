@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prediction Result</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #f7f9fc; 
+            margin: 0; 
+            padding: 0; 
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h2 { color: #2c3e50; margin-bottom: 20px; }
+        p { font-size: 16px; margin: 8px 0; }
+        .images {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .images div {
+            text-align: center;
+        }
+        img {
+            max-width: 300px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            background-color: #3498db;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 5px;
+        }
+        a:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Prediction Result</h2>
+        <p><strong>Prediction:</strong> {{ prediction }}</p>
+        <p><strong>Confidence:</strong> {{ confidence }}%</p>
+        <p><strong>Severity:</strong> {{ severity }}</p>
+
+        <div class="images">
+            <div>
+                <h3>Uploaded Image</h3>
+                <img src="{{ url_for('static', filename='uploads/' + filename) }}">
+            </div>
+            <div>
+                <h3>Grad-CAM Heatmap</h3>
+                <img src="{{ url_for('static', filename=heatmap) }}">
+            </div>
+        </div>
+
+        <a href="{{ url_for('index') }}">Upload another image</a>
+        <a href="{{ url_for('download_report', filename=filename, prediction=prediction, confidence=confidence, severity=severity) }}">
+    Download Report (PDF)
+</a>
+    </div>
+</body>
+</html>
