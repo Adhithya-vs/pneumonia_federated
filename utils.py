@@ -5,6 +5,9 @@ from torchvision.transforms import Grayscale
 from PIL import Image
 import numpy as np
 import cv2
+import csv
+import os
+from torch.utils.data import Dataset, DataLoader
 
 # Define image transformations
 transform = transforms.Compose([
@@ -14,10 +17,53 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.5], std=[0.5])
 ])
 
+# Custom Dataset for Multi-label Classification
+class MultiDiseaseDataset(Dataset):
+    def __init__(self, csv_file, img_dir, transform=None):
+        self.img_dir = img_dir
+        self.transform = transform
+        self.items = []
+        self.classes = []
+        
+        if os.path.exists(csv_file):
+            with open(csv_file, 'r', encoding='utf-8') as f:
+                reader = csv.reader(f)
+                header = next(reader)
+                self.classes = header[1:] # e.g. ["Pneumonia", "COVID-19"]
+                for row in reader:
+                    self.items.append((row[0], [float(x) for x in row[1:]]))
+        else:
+            print(f"⚠️ Warning: {csv_file} not found. Please create it with headers [filename, Disease1, Disease2, ...]")
+            self.classes = ["Pneumonia", "COVID-19", "Tuberculosis"] # Default fallback classes
+
+    def __len__(self):
+        return max(1, len(self.items)) # return 1 if empty to avoid DataLoader crashes during init
+
+    def __getitem__(self, idx):
+        if not self.items:
+            # Fallback returning a blank image and zero labels if dataset isn't configured yet
+            img = Image.new('L', (224, 224))
+            labels = [0.0] * len(self.classes)
+            if self.transform: img = self.transform(img)
+            return img, torch.tensor(labels, dtype=torch.float32)
+
+        img_name, labels = self.items[idx]
+        img_path = os.path.join(self.img_dir, img_name)
+        
+        try:
+            image = Image.open(img_path).convert("L")
+        except FileNotFoundError:
+            image = Image.new('L', (224, 224))
+            
+        if self.transform:
+            image = self.transform(image)
+            
+        return image, torch.tensor(labels, dtype=torch.float32)
+
 # Load datasets
-train_data = datasets.ImageFolder(root="data/chest_xray/train", transform=transform)
-val_data   = datasets.ImageFolder(root="data/chest_xray/val", transform=transform)
-test_data  = datasets.ImageFolder(root="data/chest_xray/test", transform=transform)
+train_data = MultiDiseaseDataset(csv_file="data/chest_xray/train_labels.csv", img_dir="data/chest_xray/train_images", transform=transform)
+val_data   = MultiDiseaseDataset(csv_file="data/chest_xray/val_labels.csv", img_dir="data/chest_xray/val_images", transform=transform)
+test_data  = MultiDiseaseDataset(csv_file="data/chest_xray/test_labels.csv", img_dir="data/chest_xray/test_images", transform=transform)
 
 # Create DataLoaders
 train_loader = DataLoader(train_data, batch_size=32, shuffle=True)
@@ -25,9 +71,9 @@ val_loader   = DataLoader(val_data, batch_size=32, shuffle=False)
 test_loader  = DataLoader(test_data, batch_size=32, shuffle=False)
 
 # Quick check
-print("Train samples:", len(train_data))
-print("Validation samples:", len(val_data))
-print("Test samples:", len(test_data))
+print("Train samples:", len(train_data.items))
+print("Validation samples:", len(val_data.items))
+print("Test samples:", len(test_data.items))
 print("Classes:", train_data.classes)
 
 

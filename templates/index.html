@@ -1,49 +1,565 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>Pneumonia Detection</title>
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            background-color: #f7f9fc; 
-            margin: 0; 
-            padding: 0; 
-        }
-        .container {
-            max-width: 600px;
-            margin: 60px auto;
-            background: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        h2 { color: #2c3e50; margin-bottom: 20px; }
-        input[type="file"] {
-            margin: 20px 0;
-        }
-        button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pneumonia Detection AI | Next-Gen Diagnostic Tool</title>
+    <meta name="description" content="AI-powered Pneumonia Detection from Radiographs">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+        <symbol id="icon-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+        </symbol>
+        <symbol id="icon-scan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+            <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+            <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+            <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+            <rect x="7" y="7" width="10" height="10" rx="1"></rect>
+        </symbol>
+    </svg>
 </head>
+
 <body>
-    <div class="container">
-        <h2>Pneumonia Detection from Chest X-ray</h2>
-        <form method="POST" enctype="multipart/form-data">
-            <input type="file" name="file" accept="image/*" required>
-            <br>
-            <button type="submit">Upload & Analyze</button>
-        </form>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                Diagnos<span>AI</span>
+            </div>
+
+            <div class="sidebar-profile-section">
+                <div class="sidebar-avatar-wrapper">
+                    {% if current_doctor and current_doctor.profile_pic %}
+                    <img src="{{ url_for('static', filename=current_doctor.profile_pic) }}" alt="Profile">
+                    {% else %}
+                    <div class="placeholder-avatar-xl">👤</div>
+                    {% endif %}
+                </div>
+                <div class="sidebar-name">{{ current_doctor.username.upper() if current_doctor else 'UNKNOWN DOCTOR' }}
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" onclick="showSection('home-section', this)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    Home
+                </a>
+                <a href="#" class="nav-item" id="nav-patients" onclick="showSection('patients-section', this)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    Patient Details
+                </a>
+                <a href="#" class="nav-item" id="nav-model" onclick="showSection('model-section', this)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                    </svg>
+                    Model Analysis
+                </a>
+                <a href="#" class="nav-item" id="nav-chat" onclick="showSection('chat-section', this)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    Discussions
+                    <span id="chat-badge" style="display: none; background: var(--danger); color: white; border-radius: 10px; padding: 2px 6px; font-size: 11px; margin-left: auto; font-weight: bold;">0</span>
+                </a>
+                <a href="{{ url_for('account') }}"
+                    class="nav-item {% if request.endpoint == 'account' %}active{% endif %}">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                    Setting
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-item" style="color: var(--danger); margin-top: 10px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    Sign Out
+                </a>
+
+            </nav>
+        </aside>
+
+        <main class="main-content">
+
+            <!-- Home Section -->
+            <div id="home-section" class="content-section active">
+                <div class="container stagger-1" style="background: transparent; border: none; box-shadow: none;">
+                    <h2>Pneumonia Detection System <br><span style="color: var(--primary); font-size: 28px;">Federated
+                            Learning</span></h2>
+                    <p class="hero-description stagger-2">
+                        Welcome to the Next-Gen Diagnostic Tool. This project utilizes an advanced federated learning
+                        approach to preserve patient privacy while providing high-accuracy CNN-based automated detection
+                        of pneumonia from chest radiographs.
+                    </p>
+                    <div style="text-align: center;" class="stagger-3">
+                        <button class="btn" onclick="showSection('upload-section')" style="max-width: 250px;">
+                            Get Started
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Section -->
+            <div id="upload-section" class="content-section">
+                <div class="container stagger-1">
+                    <h2 class="stagger-1">Patient Intake & Scan</h2>
+                    <p class="subtitle stagger-2">Enter demographics and upload a radiograph to init protocol</p>
+
+                    <form id="uploadForm" method="POST" action="/" enctype="multipart/form-data" class="stagger-3">
+
+                        <!-- Form Fields -->
+                        <div class="patient-form-grid">
+                            <div class="form-group">
+                                <label>Patient Name</label>
+                                <input type="text" name="patient_name" class="form-control" required
+                                    placeholder="John Doe">
+                            </div>
+                            <div class="form-group">
+                                <label>Age</label>
+                                <input type="number" name="age" class="form-control" required placeholder="45">
+                            </div>
+                            <div class="form-group">
+                                <label>Gender</label>
+                                <select name="gender" class="form-control" required>
+                                    <option value="" disabled selected>Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone No.</label>
+                                <input type="tel" name="phone" class="form-control" required
+                                    placeholder="+1 234 567 8900">
+                            </div>
+                            <div class="form-group">
+                                <label>Height (cm)</label>
+                                <input type="number" name="height" class="form-control" required placeholder="175">
+                            </div>
+                            <div class="form-group">
+                                <label>Weight (kg)</label>
+                                <input type="number" name="weight" class="form-control" required placeholder="70">
+                            </div>
+                        </div>
+
+                        <div class="upload-area" id="dropZone" style="margin-top: 15px;">
+                            <svg class="upload-icon" width="60" height="60">
+                                <use href="#icon-upload"></use>
+                            </svg>
+                            <div class="file-label">Drop Radiograph File Here</div>
+                            <div class="file-info">Accepts raw DICOM, JPEG, PNG, JPG architectures</div>
+                            <input type="file" name="file" id="fileInput" class="file-input" accept="image/*" required>
+                            <div id="file-name-display"></div>
+                        </div>
+
+                        <button type="submit" class="btn" id="submitBtn">
+                            <svg width="20" height="20" style="margin-right: 10px;">
+                                <use href="#icon-scan"></use>
+                            </svg>
+                            Initialize Scan Protocol
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Patients Section -->
+            <div id="patients-section" class="content-section">
+                <div class="container stagger-1" style="max-width: 1250px; min-height: 600px; padding: 40px;">
+                    <h2>Patient Details</h2>
+                    <p class="subtitle">History of diagnostic scans and generated reports</p>
+
+                    <div class="search-container stagger-1" style="margin-bottom: 20px;">
+                        <input type="text" id="patientSearch"
+                            placeholder="Search patients by name, age, gender, diagnosis, consultant, or date..."
+                            style="width: 100%; padding: 12px 15px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 14px; outline: none;"
+                            onkeyup="filterPatients(this.value)">
+                    </div>
+
+                    <div class="patients-table-container stagger-2">
+                        <table class="patients-table">
+                            <thead>
+                                <tr style="font-size: 15px;">
+                                    <th>Patient Info (Name & Date)</th>
+                                    <th>Age/Gender</th>
+                                    <th>Diagnosis</th>
+                                    <th>Consultant</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="patients-list">
+                                <!-- Populated by JS API call -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Model Section -->
+            <div id="model-section" class="content-section">
+                <div class="container stagger-1" style="padding: 40px;">
+                    <h2>Federated Model Analysis</h2>
+                    <p class="subtitle">Network architecture & Performance Metrics</p>
+
+                    <div class="stats-grid" style="margin-bottom: 30px; grid-template-columns: repeat(3, 1fr);">
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="stats-total">0</div>
+                            <div class="stat-label">Total Predictions</div>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="stats-accuracy" style="color: var(--primary);">0%</div>
+                            <div class="stat-label">Verified Accuracy</div>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div style="font-size: 16px; font-weight: bold; color: var(--success); margin-bottom: 3px;"
+                                id="stats-correct">0 Correct</div>
+                            <div style="font-size: 16px; font-weight: bold; color: var(--danger); margin-bottom: 3px;"
+                                id="stats-incorrect">0 Incorrect</div>
+                            <div style="font-size: 14px; font-weight: bold; color: var(--text-muted);"
+                                id="stats-pending">0 Pending</div>
+                            <div class="stat-label" style="margin-top: 10px;">Verification Breakdown</div>
+                        </div>
+                    </div>
+
+                    <div class="hero-description" style="text-align: left; font-size: 16px;">
+                        <p><strong>Architecture:</strong> Deep Convolutional Neural Network (CNN) engineered for
+                            distributed training without exposing raw patient data.</p><br>
+                        <p><strong>Federated Learning Core:</strong> Securely aggregates parameter updates from client
+                            edge-nodes, maintaining 100% on-premise data localization for enhanced clinical compliance.
+                        </p><br>
+                        <p><strong>Interpretability (Grad-CAM):</strong> Gradient-weighted Class Activation Mappings
+                            highlight topographical radiological features influencing neural assertion layers, serving
+                            as an advisory verification protocol for radiologists.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Section -->
+            <div id="chat-section" class="content-section">
+                <div class="container stagger-1" style="max-width: 900px; padding: 40px; display: flex; flex-direction: column; height: 80vh; min-height: 600px;">
+                    <h2>Consultant Discussions</h2>
+                    <p class="subtitle">Real-time case board and communications</p>
+                    
+                    <div id="chat-messages" data-msg-count="0" style="flex: 1; overflow-y: auto; background: rgba(255,255,255,0.5); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
+                        <!-- messages will load here -->
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="chatInput" class="form-control" placeholder="Type a message..." style="flex: 1;" onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                        <button class="btn" onclick="sendChatMessage()" style="width: 120px;">Send</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
     </div>
+
+    <div class="loader-overlay" id="loader">
+        <div class="hexa-grid">
+            <div class="hexagon"></div>
+            <div class="hexagon"></div>
+            <div class="hexagon"></div>
+        </div>
+        <div class="loader-text">Executing Tensor Analysis<span class="typing-dots"></span></div>
+    </div>
+
+    <script>
+        // Section Navigation
+        function showSection(sectionId, navElement = null) {
+            document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+
+            if (navElement) {
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                navElement.classList.add('active');
+            }
+
+            if (sectionId === 'chat-section') {
+                const badge = document.getElementById('chat-badge');
+                if (badge) badge.style.display = 'none';
+                loadChat();
+            }
+
+            if (sectionId === 'patients-section') {
+                loadPatients();
+            } else if (sectionId === 'model-section') {
+                loadModelStats();
+            }
+        }
+
+        function loadModelStats() {
+            fetch('/api/model_stats')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('stats-total').textContent = data.total_predictions;
+                    document.getElementById('stats-accuracy').textContent = data.accuracy + '%';
+                    document.getElementById('stats-correct').textContent = data.correct + ' Correct';
+                    document.getElementById('stats-incorrect').textContent = data.incorrect + ' Incorrect';
+                    document.getElementById('stats-pending').textContent = data.pending + ' Pending';
+                })
+                .catch(err => console.error("Error loading model stats", err));
+        }
+
+        // Fetch patients for registry
+        let allPatients = [];
+
+        function loadPatients() {
+            fetch('/api/patients')
+                .then(res => res.json())
+                .then(data => {
+                    allPatients = data;
+                    renderPatients(data);
+                })
+                .catch(err => console.error("Error loading patients", err));
+        }
+
+        function filterPatients(searchTerm) {
+            if (!searchTerm) {
+                renderPatients(allPatients);
+                return;
+            }
+            searchTerm = searchTerm.toLowerCase();
+            const filtered = allPatients.filter(p =>
+                (p.name && p.name.toLowerCase().includes(searchTerm)) ||
+                (p.age && p.age.toString().includes(searchTerm)) ||
+                (p.gender && p.gender.toLowerCase().includes(searchTerm)) ||
+                (p.prediction && p.prediction.toLowerCase().includes(searchTerm)) ||
+                (p.consultant && p.consultant.toLowerCase().includes(searchTerm)) ||
+                (p.date && p.date.toLowerCase().includes(searchTerm))
+            );
+            renderPatients(filtered);
+        }
+
+        function renderPatients(data) {
+            const tbody = document.getElementById('patients-list');
+            tbody.innerHTML = '';
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No records found.</td></tr>';
+            } else {
+                data.forEach(p => {
+                    let badgeClass = p.prediction.toLowerCase() === 'normal' ? 'normal' : 'pneumonia';
+                    let badgeStyle = p.prediction.toLowerCase() === 'normal'
+                        ? 'color: var(--success); background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); padding: 4px 10px; border-radius: 8px;'
+                        : 'color: var(--danger); background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); padding: 4px 10px; border-radius: 8px;';
+
+                    tbody.innerHTML += `
+                        <tr style="font-size: 15px;">
+                            <td>
+                                <div style="font-weight: 600; font-size: 16px;">${p.name}</div>
+                                <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">${p.date || 'Unknown Date'}</div>
+                            </td>
+                            <td style="color: var(--text-muted);">${p.age} / ${p.gender}</td>
+                            <td><span style="${badgeStyle}; font-size: 14px; padding: 6px 12px; display: inline-block; font-weight: bold;">${p.prediction}</span></td>
+                            <td style="color: var(--text-muted); font-size: 15px;">Dr. ${p.consultant || 'Unknown'}</td>
+                            <td>
+                                <div style="display: flex; gap: 8px;">
+                                    ${p.report_url
+                            ? `<a href="${p.report_url}" target="_blank" class="btn btn-sm" style="padding: 8px 16px; font-size: 13px;">View Report</a>`
+                            : `<span style="color: var(--text-muted); font-size: 13px; padding: 8px 0;">Not Generated</span>`
+                        }
+                                    <button class="btn btn-sm" onclick="deletePatient('${p.id}')" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); padding: 8px 16px; font-size: 13px;">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        function deletePatient(patientId) {
+            if (confirm("Are you sure you want to delete this patient record? This action cannot be undone by the model analysis either.")) {
+                fetch('/api/patients/' + patientId, {
+                    method: 'DELETE'
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            loadPatients();
+                        } else {
+                            alert("Error deleting patient: " + data.error);
+                        }
+                    })
+                    .catch(err => console.error("Error deleting patient", err));
+            }
+        }
+
+        // Check hash on load
+        window.addEventListener('load', () => {
+            if (window.location.hash === '#patients') {
+                showSection('patients-section', document.getElementById('nav-patients'));
+            } else if (window.location.hash === '#model') {
+                showSection('model-section', document.getElementById('nav-model'));
+            }
+        });
+
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileNameDisplay = document.getElementById('file-name-display');
+        const form = document.getElementById('uploadForm');
+        const loader = document.getElementById('loader');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+        });
+
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            updateFileName();
+        }
+
+        fileInput.addEventListener('change', updateFileName);
+
+        function updateFileName() {
+            if (fileInput.files.length > 0) {
+                fileNameDisplay.textContent = `[TARGET_AQUIRED] - ${fileInput.files[0].name}`;
+                fileNameDisplay.classList.add('visible');
+            } else {
+                fileNameDisplay.textContent = '';
+                fileNameDisplay.classList.remove('visible');
+            }
+        }
+
+        form.addEventListener('submit', (e) => {
+            if (fileInput.files.length > 0) {
+                loader.classList.add('active');
+            }
+        });
+
+        // Chat Logic
+        const currentDoctorEmail = "{{ current_doctor.email if current_doctor else '' }}";
+
+        const storageKey = 'chat_read_count_' + currentDoctorEmail;
+        let readMessageCount = parseInt(localStorage.getItem(storageKey)) || 0;
+        let isChatInitialized = false;
+
+        async function loadChat() {
+            try {
+                const res = await fetch('/api/chat');
+                const messages = await res.json();
+                const totalMessages = messages.length;
+                const container = document.getElementById('chat-messages');
+                const badge = document.getElementById('chat-badge');
+                
+                if (!isChatInitialized && localStorage.getItem(storageKey) === null && totalMessages > 0) {
+                    // Start fresh if they've never opened it on this browser, so they don't get overwhelmed with 1000 badges
+                    // Or they can see the unread if we set it to something specifically. Let's just set it to totalMessages - newMessages if we had an API.
+                    // For simplicity, let's just let it be 0 so they see the badge the first time they log in on a new device.
+                    isChatInitialized = true;
+                }
+                
+                const isChatActive = document.getElementById('chat-section').classList.contains('active');
+                
+                if (isChatActive) {
+                    readMessageCount = totalMessages;
+                    localStorage.setItem(storageKey, readMessageCount);
+                    if (badge) badge.style.display = 'none';
+                    if (parseInt(container.dataset.msgCount) !== totalMessages) {
+                        renderChatMessages(messages, container);
+                    }
+                } else {
+                    if (totalMessages > readMessageCount) {
+                        const unread = totalMessages - readMessageCount;
+                        if (badge) {
+                            badge.textContent = unread;
+                            badge.style.display = 'inline-block';
+                        }
+                    } else {
+                        if (badge) badge.style.display = 'none';
+                    }
+                }
+            } catch (e) {
+                console.error("Error polling chat:", e);
+            }
+        }
+        
+        function renderChatMessages(messages, container) {
+            let html = '';
+            messages.forEach(msg => {
+                const isMine = msg.sender_email === currentDoctorEmail;
+                const align = isMine ? 'flex-end' : 'flex-start';
+                const bg = isMine ? 'var(--primary)' : '#f1f5f9';
+                const color = isMine ? 'white' : 'var(--text-dark)';
+                
+                html += `
+                    <div style="align-self: ${align}; max-width: 70%; display: flex; flex-direction: column;">
+                        <span style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px; text-align: ${isMine ? 'right' : 'left'};"><span style="font-weight: bold; color: var(--primary);">${isMine ? 'You' : msg.sender_name}</span> • ${msg.timestamp}</span>
+                        <div style="background: ${bg}; color: ${color}; padding: 12px 16px; border-radius: 12px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); word-wrap: break-word;">
+                            ${msg.text}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            container.dataset.msgCount = messages.length;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+            
+            try {
+                await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({text: text})
+                });
+                loadChat();
+            } catch (e) {
+                console.error("Error sending message:", e);
+            }
+        }
+
+        // Initialize immediately
+        loadChat();
+
+        // Poll every 3 seconds regardless of what section we are on
+        setInterval(loadChat, 3000);
+    </script>
 </body>
+
 </html>

@@ -13,8 +13,9 @@ else:
     print("⚠️ Using CPU (no GPU detected)")
 
 # Model, loss, optimizer
-model = PneumoniaCNN().to(device)
-criterion = nn.CrossEntropyLoss()
+num_classes = len(train_data.classes) if hasattr(train_data, 'classes') else 3
+model = PneumoniaCNN(num_classes=num_classes).to(device)
+criterion = nn.BCEWithLogitsLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 # Training loop
@@ -38,8 +39,8 @@ for epoch in range(num_epochs):
         optimizer.step()
 
         running_loss += loss.item()
-        _, predicted = torch.max(outputs.data, 1)
-        total += labels.size(0)
+        predicted = (torch.sigmoid(outputs.data) > 0.5).float()
+        total += labels.numel()
         correct += (predicted == labels).sum().item()
 
     train_acc = 100 * correct / total
@@ -53,8 +54,8 @@ for epoch in range(num_epochs):
         for images, labels in val_loader:
             images, labels = images.to(device), labels.to(device)
             outputs = model(images)
-            _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
+            predicted = (torch.sigmoid(outputs.data) > 0.5).float()
+            total += labels.numel()
             correct += (predicted == labels).sum().item()
 
     val_acc = 100 * correct / total

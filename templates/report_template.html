@@ -2,83 +2,294 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Pneumonia Detection Report</title>
+    <title>Clinical Assessment Report</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            background-color: #ffffff;
-            color: #2c3e50;
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;600;700&display=swap');
+        
+        @page {
+            margin: 15mm;
+            size: A4 portrait;
         }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 20px;
+            max-width: 800px;
+            background-color: #ffffff;
+            color: #1a1b26;
+            line-height: 1.6;
+        }
+        
+        /* Cyber-clinical header */
+        .header {
+            border-bottom: 3px solid #000;
+            padding-bottom: 15px;
+            margin-bottom: 35px;
+            position: relative;
+        }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 0;
+            width: 30%;
+            height: 1px;
+            background: #000;
+        }
+        
+        .sys-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #64748b;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
         h2 {
-            text-align: center;
+            font-size: 32px;
+            margin: 0 0 5px 0;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            position: relative;
+            padding-left: 20px;
+            border-left: 2px solid #e2e8f0;
+        }
+        
+        .section-title {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        /* Stats Table */
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
             margin-bottom: 20px;
         }
-        .section {
-            margin-bottom: 25px;
+        
+        .stats-table td {
+            padding: 15px;
+            border: 1px solid #cbd5e1;
+            width: 50%;
         }
-        .section h3 {
-            margin-bottom: 10px;
-            color: #34495e;
+        
+        .stats-table .label {
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
         }
-        p {
-            font-size: 16px;
-            margin: 6px 0;
+        
+        .stats-table .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f172a;
         }
-        .images {
-            display: flex;
-            justify-content: space-around;
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            font-size: 20px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border: 2px solid #000;
+        }
+        
+        .status-pneumonia {
+            color: #dc2626;
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+        
+        .status-normal {
+            color: #16a34a;
+            border-color: #16a34a;
+            background: #f0fdf4;
+        }
+        
+        /* Image presentation */
+        .images-grid {
+            display: table;
+            width: 100%;
             margin-top: 20px;
         }
-        .images div {
-            text-align: center;
+        
+        .img-col {
+            display: table-cell;
+            width: 48%;
+            vertical-align: top;
         }
+        
+        .img-col.spacer {
+            width: 4%;
+        }
+        
+        .img-wrapper {
+            border: 1px solid #cbd5e1;
+            padding: 5px;
+            background: #f8fafc;
+            border-radius: 4px;
+        }
+        
         img {
-            max-width: 300px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
+            max-width: 100%;
+            display: block;
+            border: 1px solid #e2e8f0;
         }
+        
+        .img-caption {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            text-align: center;
+            margin-top: 8px;
+            color: #475569;
+        }
+        
+        /* Warning box */
+        .disclaimer {
+            margin-top: 25px;
+            border: 1px dashed #94a3b8;
+            padding: 15px;
+            background: #f8fafc;
+        }
+        
+        .disclaimer-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: #dc2626;
+            margin-bottom: 8px;
+        }
+        
+        .disclaimer-text {
+            font-size: 12px;
+            color: #475569;
+            margin: 0;
+            line-height: 1.5;
+        }
+
         .footer {
             margin-top: 40px;
-            font-size: 14px;
-            text-align: center;
-            color: #7f8c8d;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            color: #94a3b8;
+            text-align: right;
         }
     </style>
 </head>
 <body>
-    <h2>Pneumonia Detection Report</h2>
-
-    <div class="section">
-        <h3>Diagnostic Summary</h3>
-        <p><strong>Prediction:</strong> {{ prediction }}</p>
-        <p><strong>Confidence:</strong> {{ confidence }}%</p>
-        <p><strong>Severity:</strong> {{ severity }}</p>
-    </div>
-
-    <div class="section">
-        <h3>Visual Evidence</h3>
-        <div class="images">
-            <div>
-                <h4>Uploaded Image</h4>
-                <img src="{{ upload_path }}">
-            </div>
-            <div>
-                <h4>Grad-CAM Heatmap</h4>
-                <img src="{{ heatmap_path }}">
-            </div>
+    <div class="header">
+        <div class="sys-id" style="text-align: right;">
+            {% if patient.date %}<span>DATE: {{ patient.date|upper }}</span>{% endif %}
+        </div>
+        <h2>Clinical Analysis Report</h2>
+        <div class="sys-id">
+            {% if patient.consultant %}<span>CONSULTANT: DR. {{ patient.consultant|upper }}</span>{% endif %}
         </div>
     </div>
 
     <div class="section">
-        <h3>Model Explanation</h3>
-        <p>This prediction was generated using a convolutional neural network (CNN) trained for pneumonia detection. 
-           The Grad-CAM heatmap highlights regions of the chest X-ray that contributed most to the model’s decision.</p>
+        <div class="section-title">00 // Subject Demographics</div>
+        <table class="stats-table" style="margin-bottom: 0;">
+            <tr>
+                <td style="width: 33%;">
+                    <div class="label">Patient Name</div>
+                    <div class="value" style="font-size: 18px;">{{ patient.name }}</div>
+                </td>
+                <td style="width: 33%;">
+                    <div class="label">Age / Gender</div>
+                    <div class="value" style="font-size: 18px;">{{ patient.age }} / {{ patient.gender }}</div>
+                </td>
+                <td style="width: 34%;">
+                    <div class="label">Contact</div>
+                    <div class="value" style="font-size: 18px;">{{ patient.phone }}</div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="label">Height</div>
+                    <div class="value" style="font-size: 18px;">{{ patient.height }} cm</div>
+                </td>
+                <td>
+                    <div class="label">Weight</div>
+                    <div class="value" style="font-size: 18px;">{{ patient.weight }} kg</div>
+                </td>
+                <td>
+                    <div class="label">Record ID</div>
+                    <div class="value" style="font-size: 14px; font-family: monospace;">{{ patient.id[:8] }}</div>
+                </td>
+            </tr>
+        </table>
     </div>
 
-    <div class="footer">
-        <p><em>This report is generated by an AI model and should be reviewed by a medical professional.</em></p>
-        <p>Generated by Pneumonia Federated Learning Demo</p>
+    <div class="section">
+        <div class="section-title">01 // Primary Findings</div>
+        <table class="stats-table">
+            <tr>
+                <td>
+                    <div class="label">System Classification</div>
+                    <div class="status-badge {% if patient.prediction|lower == 'normal' %}status-normal{% else %}status-pneumonia{% endif %}">
+                        {{ patient.prediction }}
+                    </div>
+                </td>
+                <td>
+                    <div class="label">Neural Activation Confidence</div>
+                    <div class="value">{{ patient.confidence }}%</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section" style="page-break-inside: avoid;">
+        <div class="section-title">02 // Radiological Telemetry</div>
+        <div class="images-grid">
+            <div class="img-col">
+                <div class="img-wrapper">
+                    <img src="{{ upload_path }}" alt="Original Radiograph">
+                </div>
+                <div class="img-caption">SOURCE TENSOR [RAW]</div>
+            </div>
+            <div class="img-col spacer"></div>
+            <div class="img-col">
+                <div class="img-wrapper">
+                    <img src="{{ heatmap_path }}" alt="Grad-CAM Overlay">
+                </div>
+                <div class="img-caption">GRAD-CAM ACTIVATION [PROCESSED]</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="disclaimer">
+        <div class="disclaimer-title">! CLINICAL VERIFICATION REQUIRED</div>
+        <p class="disclaimer-text">
+            This AI-generated analysis provides statistical correlation mapping, not a clinical diagnosis. A certified medical professional must independently review all findings.
+        </p>
+    </div>
+
+    <div class="signature-section" style="margin-top: 40px; display: flex; justify-content: flex-end;">
+        <div style="text-align: center; width: 250px; float: right;">
+            <div style="border-bottom: 1px solid #000; height: 40px; margin-bottom: 8px;"></div>
+            <div style="font-weight: bold; font-size: 14px; text-transform: uppercase;">Dr. {{ patient.consultant }}</div>
+            <div style="font-size: 11px; color: #64748b; font-family: 'JetBrains Mono', monospace;">CONSULTING PHYSICIAN</div>
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+
+    <div class="footer" style="margin-top: 30px;">
+        EOF // GENERATED BY PNEUMONIA_FEDERATED_CORE_v1.0
     </div>
 </body>
 </html>

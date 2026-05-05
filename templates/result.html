@@ -1,73 +1,157 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Prediction Result</title>
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            background-color: #f7f9fc; 
-            margin: 0; 
-            padding: 0; 
-        }
-        .container {
-            max-width: 800px;
-            margin: 40px auto;
-            background: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        h2 { color: #2c3e50; margin-bottom: 20px; }
-        p { font-size: 16px; margin: 8px 0; }
-        .images {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
-        }
-        .images div {
-            text-align: center;
-        }
-        img {
-            max-width: 300px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-        }
-        a {
-            display: inline-block;
-            margin-top: 20px;
-            text-decoration: none;
-            background-color: #3498db;
-            color: white;
-            padding: 10px 18px;
-            border-radius: 5px;
-        }
-        a:hover {
-            background-color: #2980b9;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnostic Results | Pneumonia AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+        <symbol id="icon-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+        </symbol>
+        <symbol id="icon-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </symbol>
+    </svg>
 </head>
 <body>
-    <div class="container">
-        <h2>Prediction Result</h2>
-        <p><strong>Prediction:</strong> {{ prediction }}</p>
-        <p><strong>Confidence:</strong> {{ confidence }}%</p>
-        <p><strong>Severity:</strong> {{ severity }}</p>
-
-        <div class="images">
-            <div>
-                <h3>Uploaded Image</h3>
-                <img src="{{ url_for('static', filename='uploads/' + filename) }}">
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                Diagnos<span>AI</span>
             </div>
-            <div>
-                <h3>Grad-CAM Heatmap</h3>
-                <img src="{{ url_for('static', filename=heatmap) }}">
-            </div>
-        </div>
 
-        <a href="{{ url_for('index') }}">Upload another image</a>
-        <a href="{{ url_for('download_report', filename=filename, prediction=prediction, confidence=confidence, severity=severity) }}">
-    Download Report (PDF)
-</a>
+            <div class="sidebar-profile-section">
+                <div class="sidebar-avatar-wrapper">
+                    {% if current_doctor and current_doctor.profile_pic %}
+                    <img src="{{ url_for('static', filename=current_doctor.profile_pic) }}" alt="Profile">
+                    {% else %}
+                    <div class="placeholder-avatar-xl">👤</div>
+                    {% endif %}
+                </div>
+                <div class="sidebar-name">{{ current_doctor.username.upper() if current_doctor else 'UNKNOWN DOCTOR' }}</div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="/" class="nav-item">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    Home
+                </a>
+                <a href="/?redir=patients#patients" class="nav-item">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    Patient Details
+                </a>
+                <a href="/?redir=model#model" class="nav-item">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+                    Model Analysis
+                </a>
+                <a href="/?redir=chat#chat" class="nav-item">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    Discussions
+                </a>
+            
+                <a href="{{ url_for('account') }}" class="nav-item {% if request.endpoint == 'account' %}active{% endif %}">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    Setting
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-item" style="color: var(--danger); margin-top: 10px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    Sign Out
+                </a>
+
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            
+            <div class="container" style="max-width: 950px;">
+                <div class="result-header stagger-1">
+                    <h2 style="font-size: 32px;">Analysis Complete</h2>
+                    <div class="subtitle" style="margin-bottom: 25px;">[PROTOCOL: PNEUMONIA_DETECTION]</div>
+                    
+                    <div class="prediction-badge {% if patient.prediction|lower == 'normal' %}normal{% else %}pneumonia{% endif %}">
+                        STATUS: {{ patient.prediction|upper }}
+                    </div>
+                </div>
+
+                <div class="stats-grid stagger-2">
+                    <div class="stat-card" style="text-align: left; padding: 20px 30px;">
+                        <div class="stat-label" style="text-align: left; margin-bottom: 10px;">Subject Demographics</div>
+                        <div style="font-size: 20px; font-weight: 700; color: white;">{{ patient.name }}</div>
+                        <div style="font-size: 14px; color: var(--text-muted); margin-top: 5px;">{{ patient.age }} yrs • {{ patient.gender }}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{ patient.confidence }}%</div>
+                        <div class="stat-label">Neural Confidence Score</div>
+                    </div>
+                </div>
+
+                <div class="images-container stagger-3">
+                    <div class="image-card">
+                        <h3>[RAW] Input Radiograph</h3>
+                        <div class="img-wrapper">
+                            <img src="{{ url_for('static', filename='uploads/' + patient.filename) }}" alt="Uploaded X-ray">
+                        </div>
+                    </div>
+                    <div class="image-card">
+                        <h3>[AUGMENTED] Grad-CAM Activation</h3>
+                        <div class="img-wrapper">
+                            <img src="{{ url_for('static', filename=patient.heatmap) }}" alt="Heatmap showing model focus areas">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions stagger-4">
+                    <a href="{{ url_for('download_report', patient_id=patient.id) }}" class="btn">
+                        <svg width="20" height="20" style="margin-right: 10px;"><use href="#icon-download"></use></svg>
+                        Export Diagnostic PDF
+                    </a>
+                    <a href="/" class="btn btn-secondary">
+                        <svg width="20" height="20" style="margin-right: 10px;"><use href="#icon-back"></use></svg>
+                        Initialize New Scan
+                    </a>
+                </div>
+                <div class="feedback-section stagger-5" id="feedback-container" style="margin-top: 30px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;">
+                    <h3 style="margin-bottom: 15px; font-size: 18px;">Was this prediction correct?</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 14px;">Your feedback helps update the model analysis performance metrics.</p>
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        <button class="btn btn-secondary" onclick="submitFeedback('{{ patient.id }}', true)" style="background: rgba(16, 185, 129, 0.1); color: var(--success); border-color: var(--success); min-width: 120px;">
+                            👍 Yes, Correct
+                        </button>
+                        <button class="btn btn-secondary" onclick="submitFeedback('{{ patient.id }}', false)" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: var(--danger); min-width: 120px;">
+                            👎 No, Incorrect
+                        </button>
+                    </div>
+                </div>
+
+                <script>
+                function submitFeedback(patientId, isCorrect) {
+                    fetch('/api/feedback/' + patientId, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ is_correct: isCorrect })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const container = document.getElementById('feedback-container');
+                            container.innerHTML = '<div style="color: var(--success); font-weight: bold; font-size: 16px;">✅ Feedback submitted successfully! The model analysis has been updated.</div>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error submitting feedback:', error);
+                        alert('Error submitting feedback');
+                    });
+                }
+                </script>
+            </div>
+        </main>
     </div>
 </body>
 </html>

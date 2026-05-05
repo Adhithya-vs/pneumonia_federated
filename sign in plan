@@ -1,0 +1,29 @@
+# Implementation Plan: Advanced Doctor Authentication & Account Management
+
+## Objective
+Implement a restrictive verification system where only pre-approved doctor emails can register via an OTP sent to their email. Registered doctors will set a username and password to log in. Added an Account Section to manage profile pictures and password changes.
+
+## Proposed Changes
+
+### 1. Database & Security
+- **Allowed Emails List**: Hardcoded verification list containing: `amayavk118@gmail.com, nandhanakmurali123@gmail.com, adhithyavs3@gmail.com, aidaelizabathvarghese2003@gmail.com`.
+- **Doctors Database** (`doctors_db.json`): Securely store registered doctors' data, including their `email`, `username`, `password` (hashed for security, using `werkzeug.security`), and `profile_pic` path.
+
+### 2. Registration & OTP Flow (`/setup`, `/verify`)
+- **Initial Setup**: A new route where a doctor enters their email. If it belongs to the allowed list, a 6-digit OTP is generated and sent to their email using `smtplib`.
+- **Email Sending**: We will configure Python's built-in `smtplib` to send emails via Gmail. **Note: This requires an App Password from a Gmail account.**
+- **Verification**: The user enters the OTP they received, chooses a unique `username`, and sets a `password`. Upon success, their profile is created.
+
+### 3. Login Flow (`/login`)
+- Updated to allow login using either the registered **Email** or the **Username**.
+- Validates against the securely stored hashed password.
+
+### 4. Account Portal (`/account`)
+- **Frontend (`account.html`)**: A new section accessed via the sidebar.
+- **Profile Picture**: Form to upload and crop/save a profile picture directly to `static/profiles/`.
+- **Password Management**: Form to change the current password (requires validation of the old password).
+- **Sidebar Integration**: The sidebar will prominently display the logged-in doctor's profile picture and username.
+
+## User Action Required
+To actually send the OTP emails, the application will need a sender email address (e.g., your Gmail) and an associated "App Password" (since standard passwords block SMTP logins).
+I will build the system to load these from [app.py](file:///c:/Users/adhit/Desktop/pneumonia_federated/app.py) or `.env`. **You will need to insert your email and app password into the configuration for the emails to successfully deliver.** I can provide instructions on how to generate the App Password if needed.

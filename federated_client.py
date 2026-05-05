@@ -10,10 +10,11 @@ def train_local_model(global_weights, train_loader, epochs=2):
     Returns the updated weights and dataset size for FedAvg.
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = PneumoniaCNN().to(device)
+    num_classes = len(train_loader.dataset.classes) if hasattr(train_loader.dataset, 'classes') else 3
+    model = PneumoniaCNN(num_classes=num_classes).to(device)
     model.load_state_dict(global_weights)   # initialize with global model
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
 
     model.train()
@@ -31,8 +32,8 @@ def train_local_model(global_weights, train_loader, epochs=2):
             optimizer.step()
 
             running_loss += loss.item()
-            _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
+            predicted = (torch.sigmoid(outputs.data) > 0.5).float()
+            total += labels.numel()
             correct += (predicted == labels).sum().item()
 
         train_acc = 100 * correct / total

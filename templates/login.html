@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Login | Pneumonia AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .login-container {
+            max-width: 450px;
+            margin: 0 auto;
+        }
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body style="justify-content: center; align-items: center; min-height: 100vh; flex-direction: column;">
+    <div class="login-container container stagger-1" style="background: rgba(13, 15, 25, 0.8);">
+        <div class="sidebar-logo" style="margin-bottom: 20px;">
+            Diagnos<span>AI</span>
+        </div>
+        <h2 style="font-size: 24px; text-transform: uppercase;">Medical Personnel Access</h2>
+        <p class="subtitle">Secure authentication required to initialize protocols</p>
+        
+        {% if error %}
+        <div class="error-message">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/login" class="stagger-2">
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Email or Username</label>
+                <input type="text" name="email" class="form-control" placeholder="dr_smith" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 30px;">
+                <label>Access Password</label>
+                <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn" style="width: 100%;">
+                <svg width="20" height="20" style="margin-right: 10px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                Secure Login
+            </button>
+        </form>
+    </div>
+</body>
+</html>

@@ -13,7 +13,8 @@ else:
     print("⚠️ Using CPU")
 
 # Initialize global model
-global_model = PneumoniaCNN().to(device)
+num_classes = len(test_loader.dataset.classes) if hasattr(test_loader.dataset, 'classes') else 3
+global_model = PneumoniaCNN(num_classes=num_classes).to(device)
 
 def federated_avg(client_weights, client_sizes):
     """Weighted average of client updates"""
@@ -53,8 +54,8 @@ for round in range(ROUNDS):
         for images, labels in test_loader:
             images, labels = images.to(device), labels.to(device)
             outputs = global_model(images)
-            _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
+            predicted = (torch.sigmoid(outputs.data) > 0.5).float()
+            total += labels.numel()
             correct += (predicted == labels).sum().item()
 
     acc = 100 * correct / total

@@ -1,0 +1,72 @@
+[
+    {
+        "id": "65b0cbd9-1493-434c-8c8a-ca0351eeaf64",
+        "sender_email": "amayavk118@gmail.com",
+        "sender_name": "Amaya VK",
+        "text": "meeting schedulted on 26 march 3:00 pm",
+        "timestamp": "24 Mar 2026, 15:13"
+    },
+    {
+        "id": "f574ee72-60fc-419d-92cb-451461af9a36",
+        "sender_email": "nandhanakmurali123@gmail.com",
+        "sender_name": "Nandhana K M",
+        "text": "Paitient 1  analysis sheduled to  28 march",
+        "timestamp": "24 Mar 2026, 15:15"
+    },
+    {
+        "id": "50a45af2-5000-4d51-8192-f3b193ff93db",
+        "sender_email": "adhithyavs3@gmail.com",
+        "sender_name": "Adhithya VS",
+        "text": "March 28 meeting with cheif",
+        "timestamp": "24 Mar 2026, 15:43"
+    },
+    {
+        "id": "a80fe6fb-2ed0-4509-9c28-b15d7674ec30",
+        "sender_email": "amayavk118@gmail.com",
+        "sender_name": "Amaya VK",
+        "text": "hello meeting postponted",
+        "timestamp": "24 Mar 2026, 19:41"
+    },
+    {
+        "id": "708d74e3-1398-4c19-a816-36268fb2004d",
+        "sender_email": "aidaelizabathvarghese2003@gmail.com",
+        "sender_name": "Aida Elizabath",
+        "text": "hello okay",
+        "timestamp": "24 Mar 2026, 19:42"
+    },
+    {
+        "id": "3af300b0-d1ca-4e93-8ca1-c317052e472a",
+        "sender_email": "nandhanakmurali123@gmail.com",
+        "sender_name": "Nandhana K M",
+        "text": "okay",
+        "timestamp": "24 Mar 2026, 22:03"
+    },
+    {
+        "id": "b3cd1761-8e78-44ce-9dd1-6ec82171675d",
+        "sender_email": "adhithyavs3@gmail.com",
+        "sender_name": "Adhithya VS",
+        "text": "okay",
+        "timestamp": "24 Mar 2026, 22:03"
+    },
+    {
+        "id": "8c028dc3-3e20-419a-993a-04b8af03dc87",
+        "sender_email": "nandhanakmurali123@gmail.com",
+        "sender_name": "Nandhana K M",
+        "text": "tommorw adhithya's duty",
+        "timestamp": "24 Mar 2026, 22:07"
+    },
+    {
+        "id": "8bdd4b78-2861-43b6-88b4-a71d681d7c31",
+        "sender_email": "adhithyavs3@gmail.com",
+        "sender_name": "Adhithya VS",
+        "text": "okay:(",
+        "timestamp": "24 Mar 2026, 22:11"
+    },
+    {
+        "id": "b8d6491f-0407-4606-bdb8-94aa36ccaf6f",
+        "sender_email": "aidaelizabathvarghese2003@gmail.com",
+        "sender_name": "Aida Elizabath",
+        "text": "no dservices today",
+        "timestamp": "25 Mar 2026, 12:25"
+    }
+]
