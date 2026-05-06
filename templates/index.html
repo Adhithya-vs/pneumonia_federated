@@ -258,21 +258,52 @@
             </div>
 
             <!-- Chat Section -->
-            <div id="chat-section" class="content-section">
-                <div class="container stagger-1" style="max-width: 900px; padding: 40px; display: flex; flex-direction: column; height: 80vh; min-height: 600px;">
-                    <h2>Consultant Discussions</h2>
-                    <p class="subtitle">Real-time case board and communications</p>
-                    
-                    <div id="chat-messages" data-msg-count="0" style="flex: 1; overflow-y: auto; background: rgba(255,255,255,0.5); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
-                        <!-- messages will load here -->
-                    </div>
+            <!-- Chat Section -->
+<div id="chat-section" class="content-section">
+    <div class="container stagger-1"
+        style="max-width: 900px; padding: 40px; display: flex; flex-direction: column; height: 80vh; min-height: 600px;">
 
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="chatInput" class="form-control" placeholder="Type a message..." style="flex: 1;" onkeypress="if(event.key === 'Enter') sendChatMessage()">
-                        <button class="btn" onclick="sendChatMessage()" style="width: 120px;">Send</button>
-                    </div>
-                </div>
-            </div>
+        <h2>Consultant Discussions</h2>
+        <p class="subtitle">Real-time case board and communications</p>
+
+        <div id="chat-messages"
+            data-msg-count="0"
+            style="
+                flex: 1;
+                overflow-y: auto;
+                background: rgba(255,255,255,0.7);
+                border: 1px solid var(--border-light);
+                border-radius: 12px;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+                gap: 12px;
+                margin-bottom: 20px;
+                scroll-behavior: smooth;
+            ">
+            <!-- messages load here -->
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <input
+                type="text"
+                id="chatInput"
+                class="form-control"
+                placeholder="Type a message..."
+                style="flex: 1;"
+                onkeypress="if(event.key === 'Enter') sendChatMessage()"
+            >
+
+            <button
+                class="btn"
+                onclick="sendChatMessage()"
+                style="width: 120px;">
+                Send
+            </button>
+        </div>
+    </div>
+</div>
 
         </main>
     </div>
@@ -309,6 +340,12 @@
                 loadModelStats();
             }
         }
+        function scrollChatToBottom() {
+    const chatBox = document.getElementById('chat-messages');
+    if (chatBox) {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+}
 
         function loadModelStats() {
             fetch('/api/model_stats')
@@ -513,52 +550,85 @@
         }
         
         function renderChatMessages(messages, container) {
-            let html = '';
-            messages.forEach(msg => {
-                const isMine = msg.sender_email === currentDoctorEmail;
-                const align = isMine ? 'flex-end' : 'flex-start';
-                const bg = isMine ? 'var(--primary)' : '#f1f5f9';
-                const color = isMine ? 'white' : 'var(--text-dark)';
-                
-                html += `
-                    <div style="align-self: ${align}; max-width: 70%; display: flex; flex-direction: column;">
-                        <span style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px; text-align: ${isMine ? 'right' : 'left'};"><span style="font-weight: bold; color: var(--primary);">${isMine ? 'You' : msg.sender_name}</span> • ${msg.timestamp}</span>
-                        <div style="background: ${bg}; color: ${color}; padding: 12px 16px; border-radius: 12px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); word-wrap: break-word;">
-                            ${msg.text}
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-            container.dataset.msgCount = messages.length;
-            container.scrollTop = container.scrollHeight;
-        }
+    container.innerHTML = '';
+
+    messages.forEach(msg => {
+        const isMine = msg.sender_email === currentDoctorEmail;
+
+        const wrapper = document.createElement('div');
+        wrapper.style.display = 'flex';
+        wrapper.style.flexDirection = 'column';
+        wrapper.style.alignItems = isMine ? 'flex-end' : 'flex-start';
+        wrapper.style.width = '100%';
+
+        const meta = document.createElement('div');
+        meta.style.fontSize = '11px';
+        meta.style.color = 'var(--text-muted)';
+        meta.style.marginBottom = '4px';
+        meta.style.fontWeight = '500';
+
+        meta.innerHTML = `
+            <span style="font-weight: bold; color: var(--primary);">
+                ${isMine ? 'You' : msg.sender_name}
+            </span>
+            • ${msg.timestamp}
+        `;
+
+        const bubble = document.createElement('div');
+        bubble.style.maxWidth = '70%';
+        bubble.style.padding = '12px 16px';
+        bubble.style.borderRadius = '14px';
+        bubble.style.fontSize = '14px';
+        bubble.style.wordBreak = 'break-word';
+        bubble.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)';
+        bubble.style.background = isMine ? 'var(--primary)' : '#f1f5f9';
+        bubble.style.color = isMine ? '#fff' : 'var(--text-dark)';
+
+        bubble.textContent = msg.text;
+
+        wrapper.appendChild(meta);
+        wrapper.appendChild(bubble);
+
+        container.appendChild(wrapper);
+    });
+
+    container.dataset.msgCount = messages.length;
+
+    // always scroll to bottom
+    setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+    }, 100);
+}
 
         async function sendChatMessage() {
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-            if (!text) return;
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
 
-            input.value = '';
-            
-            try {
-                await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({text: text})
-                });
-                loadChat();
-            } catch (e) {
-                console.error("Error sending message:", e);
-            }
+    if (!text) return;
+
+    input.value = '';
+
+    try {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ text: text })
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to send message");
         }
 
-        // Initialize immediately
-        loadChat();
+        await loadChat();
 
-        // Poll every 3 seconds regardless of what section we are on
-        setInterval(loadChat, 3000);
+        input.focus();
+    } catch (error) {
+        console.error("Chat send error:", error);
+        alert("Failed to send message.");
+    }
+}
     </script>
 </body>
 
