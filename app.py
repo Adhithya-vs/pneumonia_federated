@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import uuid
 import json
+import gdown
 from datetime import datetime
 from functools import wraps
 
@@ -16,9 +17,38 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from models.cnn_model import PneumoniaCNN
 from utils import preprocess_image, generate_gradcam, train_data
-import pdfkit
+from weasyprint import HTML
 
 # NEW: import all DB helpers (auth still uses JSON)
+# =========================================================
+# MODEL LOAD
+# =========================================================
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+num_classes = len(train_data.classes) if hasattr(train_data, 'classes') else 3
+
+MODEL_PATH = "best_model.pth"
+FILE_ID = "1fKNxpcHenRYUVw0x29jl5hfCP74YVxXN"
+
+if not os.path.exists(MODEL_PATH):
+    print("Downloading model from Google Drive...")
+    url = f"https://drive.google.com/uc?id={FILE_ID}"
+    gdown.download(url, MODEL_PATH, quiet=False)
+
+model = PneumoniaCNN(num_classes=num_classes).to(device)
+
+try:
+    model.load_state_dict(
+        torch.load(
+            MODEL_PATH,
+            map_location=device
+        )
+    )
+    print("✅ Model loaded successfully.")
+except Exception as e:
+    print(f"❌ Model load failed: {e}")
+
+model.eval()
 from database import (
     init_db, migrate_from_json,
     add_patient, get_all_patients, get_patient,
@@ -95,22 +125,7 @@ initialize_doctors()
 migrate_from_json()
 
 # =========================================================
-# MODEL LOAD
-# =========================================================
 
-device      = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-num_classes = len(train_data.classes) if hasattr(train_data, 'classes') else 3
-model       = PneumoniaCNN(num_classes=num_classes).to(device)
-
-try:
-    model.load_state_dict(
-        torch.load("models/best_model.pth", map_location=device, weights_only=True)
-    )
-    print("✅ Model loaded successfully.")
-except Exception as e:
-    print(f"⚠️  Could not load model weights: {e}")
-
-model.eval()
 
 # =========================================================
 # AUTH HELPERS
@@ -336,44 +351,52 @@ def delete_patient_route(patient_id):
 @login_required
 def download_report(patient_id):
     patient = get_patient(patient_id)
+
     if not patient:
         return "Patient not found", 404
 
-    filename    = patient["filename"]
-    upload_path = os.path.abspath(os.path.join(UPLOAD_FOLDER, filename))
-    heatmap_path = os.path.abspath(
-        os.path.join(HEATMAP_FOLDER, f"heatmap_{filename}")
+    filename = patient["filename"]
+
+    upload_path = os.path.abspath(
+        os.path.join(UPLOAD_FOLDER, filename)
     )
 
-    upload_url  = "file:///" + upload_path.replace("\\", "/")
-    heatmap_url = "file:///" + heatmap_path.replace("\\", "/")
+    heatmap_path = os.path.abspath(
+        os.path.join(
+            HEATMAP_FOLDER,
+            f"heatmap_{filename}"
+        )
+    )
 
     rendered = render_template(
         "report_template.html",
         patient=patient,
-        upload_path=upload_url,
-        heatmap_path=heatmap_url,
+        upload_path=upload_path,
+        heatmap_path=heatmap_path
     )
 
-    config  = pdfkit.configuration(
-        wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
-    )
-    options = {"enable-local-file-access": None}
-    pdf     = pdfkit.from_string(rendered, False, configuration=config, options=options)
-
-    safe_name       = patient["name"].replace(" ", "_").lower()
+    safe_name = patient["name"].replace(" ", "_").lower()
     report_filename = f"{safe_name}_report_{patient_id[:8]}.pdf"
-    report_path     = os.path.join(REPORTS_FOLDER, report_filename)
+    report_path = os.path.join(
+        REPORTS_FOLDER,
+        report_filename
+    )
 
-    with open(report_path, "wb") as f:
-        f.write(pdf)
+    HTML(
+        string=rendered,
+        base_url=os.getcwd()
+    ).write_pdf(report_path)
 
-    update_patient_report(patient_id, f"/static/reports/{report_filename}")  # ← SQLite
+    update_patient_report(
+        patient_id,
+        f"/static/reports/{report_filename}"
+    )
 
-    return Response(
-        pdf,
-        mimetype="application/pdf",
-        headers={"Content-Disposition": f"attachment;filename={report_filename}"}
+    return redirect(
+        url_for(
+            "static",
+            filename=f"reports/{report_filename}"
+        )
     )
 
 # =========================================================
