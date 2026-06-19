@@ -204,21 +204,58 @@ def generate_gradcam(model, image_tensor, class_idx, orig_path, save_path):
         for i, w in enumerate(weights):
             cam += w * acts[i]
 
+        # 1. Normalize and resize CAM
         cam = np.maximum(cam, 0)
-        cam = cv2.resize(cam, (224, 224))
-        cam -= cam.min()
         if cam.max() != 0:
             cam /= cam.max()
+        cam = cv2.resize(cam, (224, 224))
 
+        # 2. Load and prepare original image
         orig_img = cv2.imread(orig_path)
         if orig_img is None:
             raise FileNotFoundError(f"Could not load image at {orig_path}")
         orig_img = cv2.resize(orig_img, (224, 224))
 
+        # 3. Mask out background (black areas of X-ray outside the body)
+        # This helps keep the heatmap "inside" the chest
+        gray = cv2.cvtColor(orig_img, cv2.COLOR_BGR2GRAY)
+        _, body_mask = cv2.threshold(gray, 20, 255, cv2.THRESH_BINARY)
+        cam = cam * (body_mask.astype(np.float32) / 255.0)
+
+        # 4. Create Heatmap Overlay
         heatmap = cv2.applyColorMap(np.uint8(255 * cam), cv2.COLORMAP_JET)
-        overlay = cv2.addWeighted(orig_img, 0.5, heatmap, 0.5, 0)
+        overlay = cv2.addWeighted(orig_img, 0.6, heatmap, 0.4, 0)
+
+        # 5. Identify Region of Interest (ROI) and Crop
+        # Find areas with significant activation
+        threshold = 0.2
+        coords = np.where(cam > threshold)
+        
+        if len(coords[0]) > 0:
+            y_min, y_max = coords[0].min(), coords[0].max()
+            x_min, x_max = coords[1].min(), coords[1].max()
+            
+            # Calculate center and side for a square crop with 60% padding
+            center_y, center_x = (y_min + y_max) // 2, (x_min + x_max) // 2
+            side = int(max(y_max - y_min, x_max - x_min) * 1.6)
+            side = min(side, 224) # Cap at original size
+            
+            # Define crop boundaries
+            y1 = max(0, center_y - side // 2)
+            x1 = max(0, center_x - side // 2)
+            y2 = min(224, y1 + side)
+            x2 = min(224, x1 + side)
+            
+            # Adjust if we hit the right/bottom edges to keep it square
+            if y2 == 224: y1 = 224 - side
+            if x2 == 224: x1 = 224 - side
+            
+            # Crop to the portion the model used to predict
+            overlay = overlay[y1:y2, x1:x2]
+            overlay = cv2.resize(overlay, (224, 224))
+
         cv2.imwrite(save_path, overlay)
-        print(f"Grad-CAM saved to: {save_path}")
+        print(f"Focused Grad-CAM saved to: {save_path}")
 
     finally:
         fwd_handle.remove()

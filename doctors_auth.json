@@ -1,21 +1,21 @@
 {
     "amayavk118@gmail.com": {
         "email": "amayavk118@gmail.com",
-        "username": "Amaya VK",
+        "username": "Doctor3",
         "password": "scrypt:32768:8:1$7In2AOg354Z4FHXv$7d25de436a4a6b405ed2d7102715aab65a64e9d415ac81f5aedc8313673074e3b37da8fdda2c62830e1808da26c3a71c24e26c5e1a1eb1f0e515b1a0b0c5c461",
-        "profile_pic": "profiles/Amaya_VK_ammu.jpeg"
+        "profile_pic": "profiles/Amaya_VK_Doctors_green.png"
     },
     "nandhanakmurali123@gmail.com": {
         "email": "nandhanakmurali123@gmail.com",
-        "username": "Nandhana K M",
+        "username": "Doctor1",
         "password": "scrypt:32768:8:1$BaAAjOjSEmBI2Irs$f2d000a650bff6f3821eb62c3cdd59b12c6196a5dfd8445b44255e111ddd0b9188b0b61dca2629d5b3c0fea0e425b5eaf3b50bb529bdfca301298a40300a7273",
-        "profile_pic": "profiles/Nandhana_K_M_nandu.jpeg"
+        "profile_pic": "profiles/Nandhana_K_M_Doctors_green.png"
     },
     "adhithyavs3@gmail.com": {
         "email": "adhithyavs3@gmail.com",
-        "username": "Adhithya VS",
+        "username": "Doctor2",
         "password": "scrypt:32768:8:1$8kbWY1fBY9GAnax9$c747bed0a917b9680d8d0fd74a9dff947e1fb9ed1f9970913adb1b378895db587f1e69a76dd5904e4debcd747bc991a31f608c2f3e9fb36372ec2b80bfee1b08",
-        "profile_pic": "profiles/Adhithya_VS_adhii_1.jpg"
+        "profile_pic": "profiles/Adhithya_VS_Doctors_green.png"
     },
     "aidaelizabathvarghese2003@gmail.com": {
         "email": "aidaelizabathvarghese2003@gmail.com",

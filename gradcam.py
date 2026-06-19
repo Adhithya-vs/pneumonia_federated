@@ -75,16 +75,44 @@ fh.remove()
 bh.remove()
 
 # =========================================================
-# OVERLAY
+# OVERLAY & FOCUS
 # =========================================================
 
 img_np  = image.squeeze().cpu().numpy()
 img_np  = (img_np - img_np.min()) / (img_np.max() - img_np.min() + 1e-8)
 img_rgb = np.stack([img_np, img_np, img_np], axis=2)
+img_rgb = (img_rgb * 255).astype(np.uint8)
 
+# 1. Mask out background (outside chest)
+_, body_mask = cv2.threshold(cv2.cvtColor(img_rgb, cv2.COLOR_RGB2GRAY), 20, 255, cv2.THRESH_BINARY)
+cam = cam * (body_mask.astype(np.float32) / 255.0)
+
+# 2. Create Heatmap
 heatmap = cv2.applyColorMap(np.uint8(255 * cam), cv2.COLORMAP_JET)
-heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0
-overlay = np.clip(0.5 * img_rgb + 0.5 * heatmap, 0, 1)
+heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
+overlay = cv2.addWeighted(img_rgb, 0.6, heatmap, 0.4, 0)
+
+# 3. ROI Focused Crop
+threshold = 0.2
+coords = np.where(cam > threshold)
+if len(coords[0]) > 0:
+    y_min, y_max = coords[0].min(), coords[0].max()
+    x_min, x_max = coords[1].min(), coords[1].max()
+    
+    center_y, center_x = (y_min + y_max) // 2, (x_min + x_max) // 2
+    side = int(max(y_max - y_min, x_max - x_min) * 1.6)
+    side = min(side, 224)
+    
+    y1 = max(0, center_y - side // 2)
+    x1 = max(0, center_x - side // 2)
+    y2 = min(224, y1 + side)
+    x2 = min(224, x1 + side)
+    if y2 == 224: y1 = 224 - side
+    if x2 == 224: x1 = 224 - side
+    
+    overlay_focused = cv2.resize(overlay[y1:y2, x1:x2], (224, 224))
+else:
+    overlay_focused = overlay
 
 # =========================================================
 # SHOW + SAVE
@@ -99,8 +127,8 @@ axes[1].imshow(cam, cmap='jet')
 axes[1].set_title("Grad-CAM Heatmap")
 axes[1].axis('off')
 
-axes[2].imshow(overlay)
-axes[2].set_title(f"Overlay — {train_data.classes[class_idx]}")
+axes[2].imshow(overlay_focused)
+axes[2].set_title(f"Focused ROI — {train_data.classes[class_idx]}")
 axes[2].axis('off')
 
 plt.tight_layout()
